@@ -276,21 +276,18 @@ class GestureEngine:
         if not state.can_trigger() or not self._neutral:
             return []
 
-        upward_th = self.cfg.get("counter_upward_threshold", 0.18)
-        cross_ratio = self.cfg.get("counter_shoulder_cross_ratio", 0.1)
+        inward_th = self.cfg.get("counter_elbow_inward_threshold", 0.18)
 
-        lw_vel = self.tracker.velocity("norm_left_wrist")
-        rw_vel = self.tracker.velocity("norm_right_wrist")
+        le_vel = self.tracker.velocity("norm_left_elbow")
+        re_vel = self.tracker.velocity("norm_right_elbow")
 
-        # Both hands moving upward (negative y in our coord system)
-        lw_up = -lw_vel[1]
-        rw_up = -rw_vel[1]
+        # Left elbow moves rightward (+x), right elbow moves leftward (-x)
+        le_inward =  le_vel[0]
+        re_inward = -re_vel[0]
 
-        if lw_up > upward_th and rw_up > upward_th:
-            # Check that wrists have crossed shoulder level (norm_y < cross_ratio)
-            if s.norm_left_wrist[1] < cross_ratio and s.norm_right_wrist[1] < cross_ratio:
-                state.mark_triggered()
-                return [GestureEvent.COUNTER]
+        if le_inward > inward_th and re_inward > inward_th:
+            state.mark_triggered()
+            return [GestureEvent.COUNTER]
         return []
 
     def _check_dodge(self, s: Skeleton) -> List[GestureEvent]:
