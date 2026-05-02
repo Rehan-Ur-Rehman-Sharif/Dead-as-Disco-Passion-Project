@@ -66,8 +66,6 @@ GESTURE_LABELS = {
     GestureEvent.COUNTER:       "COUNTER",
     GestureEvent.DODGE:         "DODGE",
     GestureEvent.THROW:         "THROW",
-    GestureEvent.FINISHER:      "FINISHER",
-    GestureEvent.EXECUTE:       "EXECUTE",
     GestureEvent.SPECIAL_START: "SPECIAL START",
     GestureEvent.SPECIAL_END:   "SPECIAL END",
 }
@@ -75,13 +73,15 @@ GESTURE_LABELS = {
 
 def draw_debug_overlay(
     frame: np.ndarray,
-    engine: GestureEngine,
+    engine: "GestureEngine",
     fps: float,
     active_label: str,
     timing: str,
     mouse_active: bool,
+    config: dict,
 ) -> np.ndarray:
-    """Render FPS, active gesture, cooldowns, and state flags onto *frame*."""
+    """Render FPS, active gesture, pose states, deadzone, and cooldowns onto *frame*."""
+    from gesture_engine import PoseFeatures
     h, w = frame.shape[:2]
     out = frame.copy()
 
@@ -90,17 +90,36 @@ def draw_debug_overlay(
         cv2.putText(out, text, pos, cv2.FONT_HERSHEY_SIMPLEX,
                     scale, color, thickness, cv2.LINE_AA)
 
-    # FPS
+    # --- Deadzone rectangle ---
+    dz     = config.get("deadzone", {})
+    dz_cx  = float(dz.get("x",      0.5))
+    dz_cy  = float(dz.get("y",      0.5))
+    dz_hw  = float(dz.get("width",  0.3)) / 2.0
+    dz_hh  = float(dz.get("height", 0.3)) / 2.0
+    dz_x1  = int((dz_cx - dz_hw) * w)
+    dz_y1  = int((dz_cy - dz_hh) * h)
+    dz_x2  = int((dz_cx + dz_hw) * w)
+    dz_y2  = int((dz_cy + dz_hh) * h)
+
+    feat = engine.last_features
+    head_in_dz = (feat is not None and
+                  dz_cx - dz_hw <= feat.nose_x <= dz_cx + dz_hw and
+                  dz_cy - dz_hh <= feat.nose_y <= dz_cy + dz_hh)
+    dz_color = (0, 220, 80) if head_in_dz else (0, 140, 255)
+    cv2.rectangle(out, (dz_x1, dz_y1), (dz_x2, dz_y2), dz_color, 2)
+    _text("DEADZONE", (dz_x1 + 4, dz_y1 + 16), scale=0.38, color=dz_color)
+
+    # --- FPS ---
     _text(f"FPS: {fps:.1f}", (10, 25), color=(255, 255, 255))
 
-    # Active gesture label
+    # --- Active gesture label ---
     label_color = (0, 200, 255) if timing == "perfect" else (0, 255, 120)
     if active_label:
         _text(active_label, (10, 55), scale=0.9, color=label_color, thickness=2)
         if timing:
             _text(timing.upper(), (10, 85), scale=0.6, color=label_color)
 
-    # State flags
+    # --- State flags ---
     flags: List[str] = []
     if engine.is_special_active:
         flags.append("SPECIAL ACTIVE")
@@ -109,7 +128,32 @@ def draw_debug_overlay(
     for i, flag in enumerate(flags):
         _text(flag, (10, 115 + i * 22), color=(0, 140, 255))
 
-    # Cooldown timers
+    # --- Per-limb pose state ---
+    if feat is not None:
+        pose_lines: List[str] = []
+        if feat.right_arm_extended:
+            pose_lines.append("R-ARM: EXTENDED")
+        elif feat.right_arm_retracted:
+            pose_lines.append("R-ARM: RETRACTED")
+        else:
+            pose_lines.append("R-ARM: neutral")
+        if feat.left_arm_extended:
+            pose_lines.append("L-ARM: EXTENDED")
+        elif feat.left_arm_retracted:
+            pose_lines.append("L-ARM: RETRACTED")
+        else:
+            pose_lines.append("L-ARM: neutral")
+        if feat.right_hand_above_head:
+            pose_lines.append("R-HAND: ABOVE HEAD")
+        if feat.left_hand_above_head:
+            pose_lines.append("L-HAND: ABOVE HEAD")
+        y_pose = 165
+        for line in pose_lines:
+            col = (60, 220, 255) if line.split(":")[1].strip() != "neutral" else (120, 120, 120)
+            _text(line, (10, y_pose), scale=0.38, color=col)
+            y_pose += 17
+
+    # --- Cooldown bars ---
     cd = engine.cooldown_display()
     y_start = h - 10 - len(cd) * 18
     for i, (name, ms) in enumerate(cd.items()):
@@ -122,7 +166,7 @@ def draw_debug_overlay(
         _text(f"{name[:10]:<10}", (bar_x - 85, bar_y - 2), scale=0.38,
               color=(200, 200, 200))
 
-    # Mouse control indicator
+    # --- Mouse control indicator ---
     mouse_str = "MOUSE: ON" if mouse_active else "MOUSE: OFF"
     mouse_col = (0, 255, 100) if mouse_active else (100, 100, 100)
     _text(mouse_str, (w - 120, 20), scale=0.45, color=mouse_col)
@@ -266,7 +310,7 @@ def _run_main_loop(
         if SHOW_DEBUG:
             annotated = draw_debug_overlay(
                 annotated, engine, fps, active_label,
-                engine.last_timing, MOUSE_CONTROL)
+                engine.last_timing, MOUSE_CONTROL, config)
 
         cv2.imshow("Motion Combat Controller", annotated)
 

@@ -8,32 +8,26 @@
   "motion_buffer_size": 5,
   "pose_model_complexity": 0,
 
-  "attack_velocity_threshold": 0.15,
-  "attack_velocity_max": 1.5,
-  "attack_forward_dot_threshold": 0.5,
+  "deadzone": {
+    "x": 0.5,
+    "y": 0.5,
+    "width": 0.3,
+    "height": 0.3
+  },
 
-  "heavy_back_threshold": 0.20,
-  "heavy_forward_threshold": 0.20,
+  "pose_thresholds": {
+    "arm_extension_ratio": 0.75,
+    "arm_retracted_ratio": 0.45,
+    "arm_extension_angle": 150.0,
+    "arm_retracted_angle": 110.0,
+    "arm_extension_max_drop": 0.5,
+    "head_above_threshold": 0.1
+  },
 
-  "counter_elbow_inward_threshold": 0.18,
-
-  "dodge_lateral_threshold": 0.25,
-
-  "throw_forward_threshold": 0.18,
-  "throw_downward_threshold": 0.10,
-
-  "finisher_forward_threshold": 0.15,
-
-  "execute_inward_threshold": 0.20,
-  "execute_hand_distance_drop": 0.15,
-
-  "special_left_hand_height_ratio": -1.0,
-  "special_right_hand_forward_threshold": 0.15,
-
-  "neutral_velocity_threshold": 0.05,
-  "neutral_hand_torso_ratio": 0.6,
-
-  "smoothing_alpha": 0.7,
+  "timing": {
+    "pose_confirmation_ms": 0,
+    "debounce_ms": 150
+  },
 
   "mouse_deadzone_radius": 0.07,
   "mouse_sensitivity": 800,
@@ -41,12 +35,9 @@
 
   "cooldowns": {
     "attack": 75,
-    "heavy_attack": 150,
+    "throw": 100,
     "counter": 100,
     "dodge": 125,
-    "throw": 100,
-    "finisher": 175,
-    "execute": 150,
     "special_reentry": 100
   },
 

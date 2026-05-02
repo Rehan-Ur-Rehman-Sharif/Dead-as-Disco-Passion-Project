@@ -329,23 +329,6 @@ class PoseTracker:
         s.norm_right_wrist    = _norm(s.right_wrist)
         return s
 
-    # ------------------------------------------------------------------
-    # Velocity helpers (used by gesture engine)
-    # ------------------------------------------------------------------
-
-    def velocity(self, joint_attr: str, frames_back: int = 1) -> np.ndarray:
-        """
-        Return the velocity vector for *joint_attr* (e.g. 'norm_right_wrist')
-        across the last *frames_back* frames in the buffer.
-        Returns a zero vector if not enough frames are available.
-        """
-        buf = list(self.buffer)
-        if len(buf) < frames_back + 1:
-            return np.zeros(2, np.float32)
-        curr = getattr(buf[-1], joint_attr)
-        prev = getattr(buf[-1 - frames_back], joint_attr)
-        return (curr - prev).astype(np.float32)
-
     def latest(self) -> Optional[Skeleton]:
         """Return the most recent valid skeleton, or None."""
         if self.buffer:
