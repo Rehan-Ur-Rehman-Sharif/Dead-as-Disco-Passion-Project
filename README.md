@@ -110,6 +110,9 @@ When multiple gestures could fire at once, the system resolves by priority:
 ```jsonc
 {
   "camera_index": 0,          // webcam device index
+  "camera_backend": "dshow",  // capture backend: "dshow" (Windows), "v4l2" (Linux), "msmf", "any"
+  "camera_read_retries": 3,   // retry attempts per frame read (helps with virtual cameras)
+  "camera_read_retry_delay_ms": 5, // milliseconds to wait between retry attempts
   "frame_width": 640,
   "frame_height": 360,
   "motion_buffer_size": 5,    // frames kept for velocity calculation
@@ -204,3 +207,38 @@ The debug overlay (press `D`) shows real-time cooldown bars so you can see when 
 ## License
 
 Personal passion project. Use freely for personal health and fun.
+
+---
+
+## Troubleshooting
+
+### DroidCam USB — `can't grab frame` / MSMF errors
+
+If you see repeated warnings like:
+
+```
+[ WARN] global cap_msmf.cpp:1815 CvCapture_MSMF::grabFrame videoio(MSMF): can't grab frame. Error: -1072875772
+```
+
+This means Windows defaulted to the **MSMF** backend, which is unreliable with virtual/USB cameras like DroidCam.
+
+**Fix:** set `camera_backend` to `"dshow"` in `config.json` and set `camera_index` to the correct device index for DroidCam (typically `1`, but may vary depending on how many cameras are installed):
+
+```json
+{
+  "camera_index": 1,
+  "camera_backend": "dshow",
+  "camera_read_retries": 3
+}
+```
+
+The `camera_read_retries` setting (default `3`) makes the app automatically retry transient frame-grab failures before giving up, improving frame acquisition reliability when the camera driver emits intermittent errors.
+
+| `camera_backend` value | Backend used         | Notes                         |
+|------------------------|----------------------|-------------------------------|
+| `"dshow"`              | DirectShow (Windows) | Recommended for DroidCam USB  |
+| `"msmf"`               | MSMF (Windows)       | Default Windows backend; unreliable with virtual cams |
+| `"v4l2"`               | V4L2 (Linux)         | Recommended on Linux          |
+| `"any"`                | OpenCV auto-detect   | Cross-platform fallback       |
+
+If the configured backend fails to open the camera, the app will automatically retry with `"any"` and print a warning.
