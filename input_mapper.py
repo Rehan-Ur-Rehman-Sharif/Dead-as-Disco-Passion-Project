@@ -11,9 +11,7 @@ Mapping
     HEAVY_RELEASE  → release left mouse button
     COUNTER        → right-mouse click
     DODGE          → Space tap
-    THROW          → R tap
-    FINISHER       → F tap
-    EXECUTE        → E tap
+    THROW          → E tap
     SPECIAL_START  → press & hold Shift + press & hold left mouse button
     SPECIAL_END    → release left mouse button + release Shift
 
@@ -183,12 +181,6 @@ class InputMapper:
             self._tap_key(_KEY_SPACE)
 
         elif event == GestureEvent.THROW:
-            self._tap_char('r')
-
-        elif event == GestureEvent.FINISHER:
-            self._tap_char('f')
-
-        elif event == GestureEvent.EXECUTE:
             self._tap_char('e')
 
         elif event == GestureEvent.SPECIAL_START:
