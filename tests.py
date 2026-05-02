@@ -130,9 +130,9 @@ def test_dodge():
 
 
 def test_counter():
-    """Both wrists rapid upward velocity fires COUNTER (RMB)."""
-    s1 = make_skeleton(norm_left_wrist=[0.0,  0.5], norm_right_wrist=[0.0,  0.5])
-    s2 = make_skeleton(norm_left_wrist=[0.0, -0.1], norm_right_wrist=[0.0, -0.1])
+    """Both elbows closing inward fires COUNTER (RMB)."""
+    s1 = make_skeleton(norm_left_elbow=[-0.4, 0.0], norm_right_elbow=[0.4, 0.0])
+    s2 = make_skeleton(norm_left_elbow=[-0.1, 0.0], norm_right_elbow=[0.1, 0.0])
     tracker = MockTracker([s1])
     engine  = GestureEngine(tracker, CONFIG)
     engine._neutral = True
@@ -197,8 +197,8 @@ def test_heavy_attack():
 
 
 def test_special_start_and_end():
-    """Left raised + right forward → SPECIAL_START; deactivation → SPECIAL_END."""
-    s_on  = make_skeleton(norm_left_wrist=[0.0, -0.3], norm_right_wrist=[-0.2, 0.0])
+    """Left raised above head + right forward → SPECIAL_START; deactivation → SPECIAL_END."""
+    s_on  = make_skeleton(norm_left_wrist=[0.0, -1.2], norm_right_wrist=[-0.2, 0.0])
     s_off = make_skeleton(norm_left_wrist=[0.0,  0.3], norm_right_wrist=[0.0,  0.3])
 
     tracker = MockTracker([s_on])
@@ -217,14 +217,14 @@ def test_special_start_and_end():
 def test_special_suppresses_attack():
     """While SPECIAL is active, ATTACK must not fire."""
     s_special = make_skeleton(
-        norm_left_wrist=[0.0, -0.3], norm_right_wrist=[-0.2, 0.0])
+        norm_left_wrist=[0.0, -1.2], norm_right_wrist=[-0.2, 0.0])
     tracker = MockTracker([s_special])
     engine  = GestureEngine(tracker, CONFIG)
     engine.update()   # activates special
     assert engine.is_special_active
 
     punch = make_skeleton(
-        norm_right_wrist=[-0.4, 0.0], norm_left_wrist=[0.0, -0.3])
+        norm_right_wrist=[-0.4, 0.0], norm_left_wrist=[0.0, -1.2])
     tracker.buffer.append(punch)
     engine._neutral = True
     events = engine.update()
