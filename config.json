@@ -1,0 +1,53 @@
+{
+  "camera_index": 0,
+  "frame_width": 640,
+  "frame_height": 360,
+  "motion_buffer_size": 5,
+  "pose_model_complexity": 0,
+
+  "attack_velocity_threshold": 0.15,
+  "attack_velocity_max": 1.5,
+  "attack_forward_dot_threshold": 0.5,
+
+  "heavy_back_threshold": 0.20,
+  "heavy_forward_threshold": 0.20,
+
+  "counter_upward_threshold": 0.18,
+  "counter_shoulder_cross_ratio": 0.1,
+
+  "dodge_lateral_threshold": 0.25,
+
+  "throw_forward_threshold": 0.18,
+  "throw_downward_threshold": 0.10,
+
+  "finisher_forward_threshold": 0.15,
+
+  "execute_inward_threshold": 0.20,
+  "execute_hand_distance_drop": 0.15,
+
+  "special_left_hand_height_ratio": 0.0,
+  "special_right_hand_forward_threshold": 0.15,
+
+  "neutral_velocity_threshold": 0.05,
+  "neutral_hand_torso_ratio": 0.6,
+
+  "smoothing_alpha": 0.7,
+
+  "mouse_deadzone_radius": 0.07,
+  "mouse_sensitivity": 800,
+  "mouse_smoothing_alpha": 0.4,
+
+  "cooldowns": {
+    "attack": 150,
+    "heavy_attack": 300,
+    "counter": 200,
+    "dodge": 250,
+    "throw": 200,
+    "finisher": 350,
+    "execute": 300,
+    "special_reentry": 200
+  },
+
+  "bpm": 128,
+  "beat_window_ms": 80
+}
