@@ -183,12 +183,29 @@ class PoseTracker:
     # Camera / model management
     # ------------------------------------------------------------------
 
+    # Map config string names to OpenCV backend constants.
+    _BACKEND_MAP: Dict[str, int] = {
+        "any":   cv2.CAP_ANY,
+        "dshow": cv2.CAP_DSHOW,
+        "msmf":  cv2.CAP_MSMF,
+        "v4l2":  cv2.CAP_V4L2,
+    }
+
     def open(self, index: Optional[int] = None,
              model_path: Optional[Path] = None) -> bool:
         """Open the webcam and load the pose model. Returns True on success."""
         # --- Webcam ---
         idx = index if index is not None else self.config.get("camera_index", 0)
-        self.cap = cv2.VideoCapture(idx)
+        backend_name = self.config.get("camera_backend", "any").lower()
+        backend = self._BACKEND_MAP.get(backend_name, cv2.CAP_ANY)
+
+        self.cap = cv2.VideoCapture(idx, backend)
+        if not self.cap.isOpened() and backend != cv2.CAP_ANY:
+            print(
+                f"[WARN] Camera backend '{backend_name}' failed to open "
+                f"index {idx}; retrying with CAP_ANY."
+            )
+            self.cap = cv2.VideoCapture(idx, cv2.CAP_ANY)
         if not self.cap.isOpened():
             return False
         self.cap.set(cv2.CAP_PROP_FRAME_WIDTH,  self._frame_width)
@@ -219,11 +236,16 @@ class PoseTracker:
         """Read one frame from the webcam. Returns None on failure."""
         if self.cap is None or not self.cap.isOpened():
             return None
-        ok, frame = self.cap.read()
-        if not ok:
-            return None
-        frame = cv2.flip(frame, 1)  # mirror so left/right feel natural
-        return frame
+        retries = self.config.get("camera_read_retries", 3)
+        retry_delay = self.config.get("camera_read_retry_delay_ms", 5) / 1000.0
+        for attempt in range(max(1, retries)):
+            ok, frame = self.cap.read()
+            if ok:
+                frame = cv2.flip(frame, 1)  # mirror so left/right feel natural
+                return frame
+            if attempt < retries - 1:
+                time.sleep(retry_delay)
+        return None
 
     def release(self) -> None:
         if self.cap is not None:

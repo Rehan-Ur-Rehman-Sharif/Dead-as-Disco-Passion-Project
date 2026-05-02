@@ -1,5 +1,8 @@
 {
   "camera_index": 0,
+  "camera_backend": "dshow",
+  "camera_read_retries": 3,
+  "camera_read_retry_delay_ms": 5,
   "frame_width": 640,
   "frame_height": 360,
   "motion_buffer_size": 5,
